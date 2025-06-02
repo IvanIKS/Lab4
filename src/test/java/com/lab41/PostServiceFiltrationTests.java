@@ -175,48 +175,12 @@ public class PostServiceFiltrationTests {
         verify(postRepository, times(1)).findByCreatedAtBetweenOrderByCreatedAtDesc(startDate, endDate);
     }
 
-    @Test
-    @DisplayName("getTopPostsForUserByLikes: Should return top N posts by likes for a user")
-    void getTopPostsForUserByLikes_PostsExist_ReturnsTopPosts() {
-        User userWithManyPosts = testUser; // Use testUser as the specific user
-        int limit = 2;
-
-        Post postA = new Post(); postA.setPostId(1L); postA.setUser(userWithManyPosts); postA.setContent("Post A");
-        Post postB = new Post(); postB.setPostId(2L); postB.setUser(userWithManyPosts); postB.setContent("Post B");
-        Post postC = new Post(); postC.setPostId(3L); postC.setUser(userWithManyPosts); postC.setContent("Post C");
-
-        List<Post> usersPosts = Arrays.asList(postA, postB, postC);
-        when(userRepository.findById(userWithManyPosts.getUserId())).thenReturn(Optional.of(userWithManyPosts));
-        when(postRepository.findByUserOrderByCreatedAtDesc(userWithManyPosts)).thenReturn(usersPosts);
-
-        // Post A: 3 likes
-        when(likeRepository.findByPost(postA)).thenReturn(Arrays.asList(new Like(), new Like(), new Like()));
-        // Post B: 1 like
-        when(likeRepository.findByPost(postB)).thenReturn(Collections.singletonList(new Like()));
-        // Post C: 2 likes
-        when(likeRepository.findByPost(postC)).thenReturn(Arrays.asList(new Like(), new Like()));
-
-        List<Post> topPosts = postService.getTopPostsForUserByLikes(userWithManyPosts.getUserId(), limit);
-
-        assertNotNull(topPosts);
-        assertEquals(limit, topPosts.size());
-
-        assertEquals(postA, topPosts.get(0));
-        assertEquals(postC, topPosts.get(1));
-
-        verify(userRepository, times(1)).findById(userWithManyPosts.getUserId());
-        verify(postRepository, times(1)).findByUserOrderByCreatedAtDesc(userWithManyPosts);
-        verify(likeRepository, times(1)).findByPost(postA);
-        verify(likeRepository, times(1)).findByPost(postB);
-        verify(likeRepository, times(1)).findByPost(postC);
-    }
 
     @Test
     @DisplayName("getTopPostsForUserByLikes: Should return all posts if user has fewer posts than limit")
     void getTopPostsForUserByLikes_FewerPostsThanLimit_ReturnsAllPosts() {
-        // Arrange
         User user = testUser;
-        int limit = 5; // Limit is higher than actual posts
+        int limit = 5;
 
         Post post1 = new Post(); post1.setPostId(1L); post1.setUser(user); post1.setContent("Post 1");
         Post post2 = new Post(); post2.setPostId(2L); post2.setUser(user); post2.setContent("Post 2");

@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -162,7 +163,6 @@ public class PostService {
     }
 
 
-
     @Transactional
     public void removeLikeFromPost(Long postId, Long userId) {
         Post post = postRepository.findById(postId)
@@ -185,17 +185,20 @@ public class PostService {
     }
 
     public List<Post> getTopPostsForUserByLikes(Long userId, int limit) {
-        Optional<User> user= userRepository.findById(userId);
-        List<Post> posts = postRepository.findByUserOrderByCreatedAtDesc(user.get());
+            try {
+                Optional<User> user = userRepository.findById(userId);
+                List<Post> posts = postRepository.findByUserOrderByCreatedAtDesc(user.get());
 
-        return posts
-                .stream()
-                .sorted((post1, post2) ->
-                                Integer.compare(
-                                        likeRepository.findByPost(post1).size(),
-                                        likeRepository.findByPost(post2).size()))
-                .limit(limit)
-                .collect(Collectors.toList());
+                return posts
+                        .stream()
+                        .sorted((post1, post2) ->
+                                likeRepository.findByPost(post2).size() -
+                                        likeRepository.findByPost(post1).size())
+                        .limit(limit)
+                        .collect(Collectors.toList());
+            } catch (NoSuchElementException e) {
+                throw new IllegalArgumentException("User with ID " + userId + " not found.");
+            }
     }
 
 
