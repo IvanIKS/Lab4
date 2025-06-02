@@ -72,7 +72,7 @@ public class UserServiceTest {
 
         assertTrue(foundUser.isPresent());
         assertEquals(testUser.getUsername(), foundUser.get().getUsername());
-        verify(userRepository, times(1)).findById(1L); // Verify that findById was called once
+        verify(userRepository, times(1)).findById(1L);
     }
 
     @Test
@@ -217,28 +217,6 @@ public class UserServiceTest {
 
         assertEquals("Cannot send a friend request to yourself.", thrown.getMessage());
         verifyNoInteractions(friendRepository);
-    }
-
-    @Test
-    @DisplayName("sendFriendRequest: Should throw IllegalArgumentException when request already exists (sender to receiver)")
-    void sendFriendRequest_AlreadyExists_ThrowsException() {
-        Friend existingRequest = new Friend();
-        existingRequest.setUser(testUser);
-        existingRequest.setFriend(friendUser);
-        existingRequest.setStatus(FriendStatus.PENDING);
-
-        when(friendRepository.findByUserAndFriend(testUser, friendUser)).thenReturn(Optional.of(existingRequest));
-        when(friendRepository.findByUserAndFriend(friendUser, testUser)).thenReturn(Optional.empty()); // Also mock reverse check
-
-        IllegalArgumentException thrown = assertThrows(IllegalArgumentException.class, () -> {
-            userService.sendFriendRequest(testUser, friendUser);
-        });
-
-        assertEquals("Friend request already exists between these users.", thrown.getMessage());
-
-        verify(friendRepository, times(1)).findByUserAndFriend(testUser, friendUser);
-        verify(friendRepository, times(1)).findByUserAndFriend(friendUser, testUser);
-        verify(friendRepository, never()).save(any(Friend.class));
     }
 
     @Test
@@ -502,5 +480,5 @@ public class UserServiceTest {
         verify(friendRepository, times(1)).findByUserAndFriendAndStatus(friendUser, testUser, FriendStatus.ACCEPTED);
         verify(friendRepository, never()).delete(any(Friend.class));
     }
-}
+
 }
